@@ -1,0 +1,12 @@
+# Python cache files
+__pycache__
+.pytest_cache
+*.pyc
+*.pyo
+
+# Virtual Environment
+venv
+
+# Custom files and folders
+data
+project-details.md
