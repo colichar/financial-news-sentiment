@@ -4,3 +4,4 @@ __pycache__
 model/
 project-details.md
 .pytest_cache
+.creds
