@@ -1,10 +1,14 @@
 from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
 from app.models import SentimentScore
+from dotenv import load_dotenv
+import os
 
-model_directory = './model'
+load_dotenv()
 
-model = AutoModelForSequenceClassification.from_pretrained(model_directory)
-tokenizer = AutoTokenizer.from_pretrained(model_directory)
+MODEL_KEY = os.getenv('LOCAL_MODEL_PATH')
+
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_KEY)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_KEY)
 
 sentiment_pipeline = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer, top_k=None)
 

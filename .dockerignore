@@ -10,3 +10,6 @@ venv
 # Custom files and folders
 data
 project-details.md
+
+# Environment variables
+.env

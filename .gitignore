@@ -1,7 +1,8 @@
 /data
 /venv
 __pycache__
-model/
+tmp/
 project-details.md
 .pytest_cache
 .creds
+.env

@@ -3,4 +3,4 @@ uvicorn
 transformers
 torch
 httpx
-pytest
+boto3
