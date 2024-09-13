@@ -1,18 +1,12 @@
-from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
 from app.models import SentimentScore
 from dotenv import load_dotenv
+from fastapi import Request
 import os
 
 load_dotenv()
 
-MODEL_KEY = os.getenv('LOCAL_MODEL_PATH')
-
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_KEY)
-tokenizer = AutoTokenizer.from_pretrained(MODEL_KEY)
-
-sentiment_pipeline = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer, top_k=None)
-
-def analyse_sentiment(text: str):
+def analyse_sentiment(request: Request, text: str):
+    sentiment_pipeline = request.app.state.sentiment_pipeline
 
     results = sentiment_pipeline(text)
 

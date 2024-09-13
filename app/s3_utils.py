@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 s3 = boto3.client('s3')
-# TODO: Add AWS Credentials
+
 S3_BUCKET = os.getenv('S3_BUCKET')
 MODEL_KEY = os.getenv('MODEL_KEY')
 VERSION_KEY = os.getenv('VERSION_KEY')
@@ -28,12 +28,27 @@ def get_local_model_version():
     return None
 
 def download_model_from_s3():
-    s3.download_file(S3_BUCKET, MODEL_KEY, LOCAL_MODEL_PATH)
-    new_version = get_model_version_from_s3()
-    with open(LOCAL_VERSION_PATH, 'w') as file:
-        file.write(new_version)
+    # Ensure the local directory exists
+    if not os.path.exists(LOCAL_MODEL_PATH):
+        os.makedirs(LOCAL_MODEL_PATH)
 
-    print(f'Downloaded new model version {new_version}')
+    response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=MODEL_KEY)
+
+    if 'Contents' in response:
+        for obj in response['Contents']:
+            file_key = obj['Key']
+            # Remove the prefix from the key to get the local file path
+            relative_path = os.path.relpath(file_key, MODEL_KEY)
+            local_file_path = os.path.join(LOCAL_MODEL_PATH, relative_path)
+
+            print(f"Downloading {file_key} to {local_file_path}...")
+
+            # Download the file
+            s3.download_file(S3_BUCKET, file_key, local_file_path)
+
+    else:
+        print(f"No contents found under prefix {MODEL_KEY}")
+
 
 def is_model_outdated():
     s3_version = get_model_version_from_s3()
