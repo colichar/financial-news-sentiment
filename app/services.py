@@ -5,8 +5,7 @@ import os
 
 load_dotenv()
 
-def analyse_sentiment(request: Request, text: str):
-    sentiment_pipeline = request.app.state.sentiment_pipeline
+def analyse_sentiment(text: str, sentiment_pipeline: None):
 
     results = sentiment_pipeline(text)
 
