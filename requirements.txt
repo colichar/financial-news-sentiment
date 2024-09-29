@@ -5,3 +5,4 @@ torch
 httpx
 boto3
 python-dotenv
+mangum
