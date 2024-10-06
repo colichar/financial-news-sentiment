@@ -5,7 +5,6 @@ from transformers import pipeline, AutoModelForSequenceClassification, AutoToken
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 import os
-from mangum import Mangum
 
 load_dotenv()
 
@@ -34,6 +33,3 @@ app.include_router(sentiment_router)
 @app.get('/health')
 async def health_check():
     return {'status': 'ok'}
-
-
-handler = Mangum(app)
