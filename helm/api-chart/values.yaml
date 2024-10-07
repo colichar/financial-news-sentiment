@@ -1,0 +1,27 @@
+deployment:
+  replicas: 1
+container:
+  image: financial-news-sentiment:latest
+  pullPolicy: Never
+  containerPort: 8000
+
+service:
+  type: NodePort
+  port: 8000
+  nodePort: 30001
+
+ingress:
+  host: fastapi.local
+
+configMap:
+  AWS_REGION: eu-central-1
+  LOCAL_MODEL_PATH: tmp/model
+  LOCAL_VERSION_PATH: tmp/model/model_version.txt
+  MODEL_KEY: financiall-sentiment-analysis-models/model/
+  S3_BUCKET: my-special-special-bucket
+  VERSION_KEY: financiall-sentiment-analysis-models/model/model_version.txt
+
+secrets:
+  AWS_ACCESS_KEY_ID: QUtJQVpEWlRCVVNTUE5TWlg3N1Q=
+  AWS_SECRET_ACCESS_KEY: czRad1R1TDlhbzZQeW9TRXltQlB1Z2NFUW5tMktGandYblpBcW5oLw==
+

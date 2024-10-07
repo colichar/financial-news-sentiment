@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+data:
+  AWS_REGION: {{ .Values.configMap.AWS_REGION }}
+  LOCAL_MODEL_PATH: {{ .Values.configMap.LOCAL_MODEL_PATH }}
+  LOCAL_VERSION_PATH: {{ .Values.configMap.LOCAL_VERSION_PATH }}
+  MODEL_KEY: {{ .Values.configMap.MODEL_KEY }}
+  S3_BUCKET: {{ .Values.configMap.S3_BUCKET }}
+  VERSION_KEY: {{ .Values.configMap.VERSION_KEY }}
