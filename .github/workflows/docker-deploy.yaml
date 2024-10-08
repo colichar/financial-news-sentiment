@@ -94,6 +94,6 @@ jobs:
           helm upgrade --install financial-news-api ./helm/api-chart \
             --set image.repository=${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/my-images/financial-news-sentiment \
             --set image.tag=latest \
-            --namespace default
+            --namespace default \
             -f ./helm/api-chart/values.yaml \
             -f ./helm/api-chart/values-prod.yaml

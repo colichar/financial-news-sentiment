@@ -24,6 +24,4 @@ sources:
 
 dependencies: []
 
-kubeVersion: ">=1.20.0"
-
 type: application
