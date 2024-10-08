@@ -11,6 +11,9 @@ env:
   VERSION_KEY: ${{ secrets.AWS_VERSION_KEY }}
   LOCAL_MODEL_PATH: ${{ secrets.AWS_LOCAL_MODEL_PATH }}
   LOCAL_VERSION_PATH: ${{ secrets.AWS_LOCAL_VERSION_PATH }}
+  GKE_CLUSTER_NAME: $${{ secrets.GKE_CLUSTER_NAME}}
+  GKE_ZONE: ${{ secrets.GKE_ZONE }}
+  GKE_PROJECT: ${{ secrets.GKE_PROJECT }}
 
 jobs:
   build:
@@ -38,20 +41,24 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
-      - name: Log into Amazon ECR
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+          export_default_credentials: true
+
+      - name: Configure Docker to use Google Cloud Registry
         run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+            gcloud auth configure-docker
 
       - name: Build and push Docker Image
         run: |
-          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest
+          IMAGE_URI=gcr.io/${{ secrets.GCP_PROJECT }}/financial-news-sentiment:latest
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
 
@@ -60,19 +67,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install AWS CLI
-        run: sudo apt-get install -y awscli
-
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+          export_default_credentials: true
 
-      - name: Deploy to AWS Lambda
+      - name: Get GKE Credentials
         run: |
-          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest
-          aws lambda update-function-code --function-name my-sentiment-api-lambda \
-          --image-uri $IMAGE_URI
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --zone ${{ secrets.GKE_ZONE }} --project ${{ secrets.GCP_PROJECT }}
+  
+      - name: Deploy to GKE using Helm
+        run: |
+          helm upgrade --install financial-news-api ./helm/api-chart \
+            --set image.repository=gcr.io/${{ secrets.GCP_PROJECT }}/financial-news-sentiment \
+            --set image.tag=latest \
+            --namespace default
+            -f ./helm/api-chart/values.yaml \
+            -f ./helm/api-chart/values-prod.yaml
