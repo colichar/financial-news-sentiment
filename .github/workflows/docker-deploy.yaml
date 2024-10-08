@@ -52,13 +52,13 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT }}
           export_default_credentials: true
 
-      - name: Configure Docker to use Google Cloud Registry
+      - name: Configure Docker to use Google Artifact Registry
         run: |
-            gcloud auth configure-docker
+            gcloud auth configure-docker ${{ secrets.GKE_ZONE }}-docker.pkg.dev
 
       - name: Build and push Docker Image
         run: |
-          IMAGE_URI=gcr.io/${{ secrets.GCP_PROJECT }}/financial-news-sentiment:latest
+          IMAGE_URI=${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/my-images/financial-news-sentiment:latest
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
 
@@ -67,6 +67,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
@@ -78,6 +81,10 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT }}
           export_default_credentials: true
 
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+
       - name: Get GKE Credentials
         run: |
           gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --zone ${{ secrets.GKE_ZONE }} --project ${{ secrets.GCP_PROJECT }}
@@ -85,7 +92,7 @@ jobs:
       - name: Deploy to GKE using Helm
         run: |
           helm upgrade --install financial-news-api ./helm/api-chart \
-            --set image.repository=gcr.io/${{ secrets.GCP_PROJECT }}/financial-news-sentiment \
+            --set image.repository=${{ secrets.GKE_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/my-images/financial-news-sentiment \
             --set image.tag=latest \
             --namespace default
             -f ./helm/api-chart/values.yaml \
