@@ -2,6 +2,10 @@ deployment:
   replicas: 1
 container:
   pullPolicy: Always
+  image: europe-central2-docker.pkg.dev/red-cable-437811-p4/my-images/financial-news-sentiment:latest
+
+service:
+  type: LoadBalancer
 
 ingress:
   host: fastapi.prod
